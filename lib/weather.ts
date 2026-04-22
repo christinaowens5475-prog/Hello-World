@@ -4,11 +4,12 @@ export interface CityConfig {
   name: string;
   lat: number;
   lon: number;
+  timezone: string;
 }
 
 export const CITIES = {
-  longBeach: { name: "Long Beach, CA", lat: 33.7701, lon: -118.1937 } satisfies CityConfig,
-  newYork:   { name: "New York, NY",   lat: 40.7128, lon: -74.0060  } satisfies CityConfig,
+  longBeach: { name: "Long Beach, CA", lat: 33.7701, lon: -118.1937, timezone: "America/Los_Angeles" } satisfies CityConfig,
+  newYork:   { name: "New York, NY",   lat: 40.7128, lon: -74.0060,  timezone: "America/New_York"    } satisfies CityConfig,
 };
 
 export interface CurrentWeather {
@@ -91,11 +92,11 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<OWMCurrent
   return fetchJSON<OWMCurrentResponse>(url);
 }
 
-function formatHour(dtUnix: number): string {
+function formatHour(dtUnix: number, timezone: string): string {
   return new Date(dtUnix * 1000).toLocaleTimeString("en-US", {
     hour: "numeric",
     hour12: true,
-    timeZone: "UTC",
+    timeZone: timezone,
   });
 }
 
@@ -104,13 +105,13 @@ interface ForecastResult {
   daily: ForecastDay[];
 }
 
-async function fetchForecast(lat: number, lon: number): Promise<ForecastResult> {
+async function fetchForecast(lat: number, lon: number, timezone: string): Promise<ForecastResult> {
   const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey()}`;
   const data = await fetchJSON<OWMForecastResponse>(url);
 
   // Next 4 entries = 12 hours at 3-hour intervals
   const hourly: HourlyEntry[] = data.list.slice(0, 4).map((entry) => ({
-    time: formatHour(entry.dt),
+    time: formatHour(entry.dt, timezone),
     temp: entry.main.temp,
     condition_id: entry.weather[0].id,
     icon: entry.weather[0].icon,
@@ -148,7 +149,7 @@ export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherDa
   const { lat, lon } = city;
   const [current, { hourly, daily }, uv_index] = await Promise.all([
     fetchCurrentWeather(lat, lon),
-    fetchForecast(lat, lon),
+    fetchForecast(lat, lon, city.timezone),
     fetchUVIndex(lat, lon),
   ]);
 
