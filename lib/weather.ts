@@ -1,6 +1,15 @@
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
-const LAT = 33.7701;
-const LON = -118.1937;
+
+export interface CityConfig {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+export const CITIES = {
+  longBeach: { name: "Long Beach, CA", lat: 33.7701, lon: -118.1937 } satisfies CityConfig,
+  newYork:   { name: "New York, NY",   lat: 40.7128, lon: -74.0060  } satisfies CityConfig,
+};
 
 export interface CurrentWeather {
   temp: number;
@@ -22,6 +31,7 @@ export interface ForecastDay {
 }
 
 export interface WeatherData {
+  city: CityConfig;
   current: CurrentWeather;
   forecast: ForecastDay[];
 }
@@ -67,13 +77,13 @@ async function fetchJSON<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function getCurrentWeather(): Promise<OWMCurrentResponse> {
-  const url = `${BASE_URL}/weather?lat=${LAT}&lon=${LON}&units=imperial&appid=${apiKey()}`;
+async function fetchCurrentWeather(lat: number, lon: number): Promise<OWMCurrentResponse> {
+  const url = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey()}`;
   return fetchJSON<OWMCurrentResponse>(url);
 }
 
-async function getForecast(): Promise<ForecastDay[]> {
-  const url = `${BASE_URL}/forecast?lat=${LAT}&lon=${LON}&units=imperial&appid=${apiKey()}`;
+async function fetchForecast(lat: number, lon: number): Promise<ForecastDay[]> {
+  const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey()}`;
   const data = await fetchJSON<OWMForecastResponse>(url);
 
   const byDay = new Map<string, OWMForecastEntry[]>();
@@ -95,20 +105,22 @@ async function getForecast(): Promise<ForecastDay[]> {
     }));
 }
 
-async function getUVIndex(): Promise<number> {
-  const url = `${BASE_URL}/uvi?lat=${LAT}&lon=${LON}&appid=${apiKey()}`;
+async function fetchUVIndex(lat: number, lon: number): Promise<number> {
+  const url = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey()}`;
   const data = await fetchJSON<OWMUVResponse>(url);
   return data.value;
 }
 
-export async function getWeatherData(): Promise<WeatherData> {
+export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherData> {
+  const { lat, lon } = city;
   const [current, forecast, uv_index] = await Promise.all([
-    getCurrentWeather(),
-    getForecast(),
-    getUVIndex(),
+    fetchCurrentWeather(lat, lon),
+    fetchForecast(lat, lon),
+    fetchUVIndex(lat, lon),
   ]);
 
   return {
+    city,
     current: {
       temp: current.main.temp ?? current.main.temp_max,
       feels_like: current.main.feels_like ?? current.main.temp,
@@ -121,4 +133,9 @@ export async function getWeatherData(): Promise<WeatherData> {
     },
     forecast,
   };
+}
+
+// Convenience wrapper kept for backwards compatibility
+export async function getWeatherData(): Promise<WeatherData> {
+  return getWeatherDataForCity(CITIES.longBeach);
 }

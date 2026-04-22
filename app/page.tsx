@@ -1,45 +1,30 @@
 export const dynamic = "force-dynamic";
 
-import { getWeatherData } from "@/lib/weather";
+import { getWeatherDataForCity, CITIES } from "@/lib/weather";
 import { getWeatherTheme } from "@/lib/getWeatherTheme";
-import CurrentWeather from "@/components/CurrentWeather";
-import WeatherDetails from "@/components/WeatherDetails";
-import Forecast from "@/components/Forecast";
+import CityPanel from "@/components/CityPanel";
 
 export default async function Home() {
-  const data = await getWeatherData();
-  const bgClass = getWeatherTheme(data.current.condition_id);
+  const [longBeach, newYork] = await Promise.all([
+    getWeatherDataForCity(CITIES.longBeach),
+    getWeatherDataForCity(CITIES.newYork),
+  ]);
 
   return (
-    <main
-      className={`min-h-screen transition-colors duration-700 ${bgClass} p-6 md:p-12`}
-    >
-      <div className="max-w-4xl mx-auto flex flex-col gap-6">
-        {/* Mobile: stack vertically. Desktop: two-column top row */}
-        <div className="flex flex-col md:grid md:grid-cols-[2fr_1fr] gap-6">
-          <CurrentWeather
-            temp={data.current.temp}
-            feelsLike={data.current.feels_like}
-            condition={data.current.description}
-            icon={data.current.icon}
-            cityName="Long Beach, CA"
-          />
-          <WeatherDetails
-            humidity={data.current.humidity}
-            windSpeed={data.current.wind_speed}
-            uvIndex={data.current.uv_index}
-          />
-        </div>
+    <main className="min-h-screen bg-slate-900 p-4 md:p-8">
+      <h1 className="text-center text-white/60 text-sm font-medium uppercase tracking-widest mb-6">
+        Weather Comparison
+      </h1>
 
-        {/* Forecast spans full width */}
-        <Forecast
-          days={data.forecast.map((day) => ({
-            date: day.date,
-            high: day.high,
-            low: day.low,
-            conditionCode: day.condition_id,
-            icon: day.icon,
-          }))}
+      {/* Mobile: stack. Desktop: side by side */}
+      <div className="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto">
+        <CityPanel
+          data={longBeach}
+          bgClass={getWeatherTheme(longBeach.current.condition_id)}
+        />
+        <CityPanel
+          data={newYork}
+          bgClass={getWeatherTheme(newYork.current.condition_id)}
         />
       </div>
     </main>

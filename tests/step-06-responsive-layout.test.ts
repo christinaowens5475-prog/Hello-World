@@ -4,49 +4,49 @@ import path from "path";
 
 const ROOT = path.resolve(__dirname, "..");
 const pageSource = readFileSync(path.join(ROOT, "app/page.tsx"), "utf-8");
+const panelSource = readFileSync(path.join(ROOT, "components/CityPanel.tsx"), "utf-8");
 
 describe("Step 06 — Responsive Layout", () => {
   it("root wrapper uses min-h-screen", () => {
     expect(pageSource).toContain("min-h-screen");
   });
 
-  it("dynamic background class applied to root wrapper", () => {
-    // bgClass (result of getWeatherTheme) is included in className
-    expect(pageSource).toMatch(/className=.*bgClass|bgClass.*className=/s);
+  it("page has responsive padding", () => {
+    // Accepts p-4/p-6 with md override
+    expect(pageSource).toMatch(/p-\d+/);
+    expect(pageSource).toMatch(/md:p-\d+/);
   });
 
-  it("transition-colors duration-700 applied for smooth background change", () => {
-    expect(pageSource).toContain("transition-colors");
-    expect(pageSource).toContain("duration-700");
-  });
-
-  it("padding is p-6 with md:p-12 responsive override", () => {
-    expect(pageSource).toContain("p-6");
-    expect(pageSource).toContain("md:p-12");
-  });
-
-  it("content is centered with max-w-4xl mx-auto", () => {
-    expect(pageSource).toContain("max-w-4xl");
+  it("content is centered with max-w and mx-auto", () => {
+    expect(pageSource).toMatch(/max-w-\w+/);
     expect(pageSource).toContain("mx-auto");
   });
 
-  it("uses md: breakpoint grid for two-column desktop layout", () => {
-    expect(pageSource).toMatch(/md:grid/);
-    expect(pageSource).toMatch(/md:grid-cols/);
-  });
-
-  it("mobile: flex-col stacks components vertically by default", () => {
+  it("mobile: components stack vertically by default", () => {
     expect(pageSource).toContain("flex-col");
   });
 
-  it("Forecast component spans full width below top row", () => {
-    // Forecast is rendered outside the two-column grid container
-    expect(pageSource).toContain("<Forecast");
+  it("desktop: comparison panels are side by side (md:flex-row)", () => {
+    expect(pageSource).toContain("md:flex-row");
   });
 
-  it("all three main components are rendered", () => {
-    expect(pageSource).toContain("<CurrentWeather");
-    expect(pageSource).toContain("<WeatherDetails");
-    expect(pageSource).toContain("<Forecast");
+  it("both city panels are rendered", () => {
+    expect(pageSource).toContain("<CityPanel");
+    const panelCount = (pageSource.match(/<CityPanel/g) ?? []).length;
+    expect(panelCount).toBe(2);
+  });
+
+  it("CityPanel applies dynamic background theme per city", () => {
+    expect(panelSource).toContain("bgClass");
+    expect(pageSource).toContain("getWeatherTheme");
+  });
+
+  it("CityPanel has its own responsive layout", () => {
+    // CityPanel stacks its sections vertically
+    expect(panelSource).toContain("flex-col");
+  });
+
+  it("each city panel includes forecast strip", () => {
+    expect(panelSource).toContain("forecast");
   });
 });
