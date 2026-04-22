@@ -30,9 +30,17 @@ export interface ForecastDay {
   icon: string;
 }
 
+export interface HourlyEntry {
+  time: string;
+  temp: number;
+  condition_id: number;
+  icon: string;
+}
+
 export interface WeatherData {
   city: CityConfig;
   current: CurrentWeather;
+  hourly: HourlyEntry[];
   forecast: ForecastDay[];
 }
 
@@ -50,8 +58,9 @@ interface OWMCurrentResponse {
 }
 
 interface OWMForecastEntry {
+  dt: number;
   dt_txt: string;
-  main: { temp_max: number; temp_min: number };
+  main: { temp: number; temp_max: number; temp_min: number };
   weather: { id: number; icon: string }[];
 }
 
@@ -82,10 +91,32 @@ async function fetchCurrentWeather(lat: number, lon: number): Promise<OWMCurrent
   return fetchJSON<OWMCurrentResponse>(url);
 }
 
-async function fetchForecast(lat: number, lon: number): Promise<ForecastDay[]> {
+function formatHour(dtUnix: number): string {
+  return new Date(dtUnix * 1000).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    hour12: true,
+    timeZone: "UTC",
+  });
+}
+
+interface ForecastResult {
+  hourly: HourlyEntry[];
+  daily: ForecastDay[];
+}
+
+async function fetchForecast(lat: number, lon: number): Promise<ForecastResult> {
   const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey()}`;
   const data = await fetchJSON<OWMForecastResponse>(url);
 
+  // Next 4 entries = 12 hours at 3-hour intervals
+  const hourly: HourlyEntry[] = data.list.slice(0, 4).map((entry) => ({
+    time: formatHour(entry.dt),
+    temp: entry.main.temp,
+    condition_id: entry.weather[0].id,
+    icon: entry.weather[0].icon,
+  }));
+
+  // Group remaining entries by day for 5-day forecast
   const byDay = new Map<string, OWMForecastEntry[]>();
   for (const entry of data.list) {
     const day = entry.dt_txt.slice(0, 10);
@@ -94,7 +125,7 @@ async function fetchForecast(lat: number, lon: number): Promise<ForecastDay[]> {
     byDay.set(day, existing);
   }
 
-  return Array.from(byDay.entries())
+  const daily: ForecastDay[] = Array.from(byDay.entries())
     .slice(0, 5)
     .map(([date, entries]) => ({
       date,
@@ -103,6 +134,8 @@ async function fetchForecast(lat: number, lon: number): Promise<ForecastDay[]> {
       condition_id: entries[0].weather[0].id,
       icon: entries[0].weather[0].icon,
     }));
+
+  return { hourly, daily };
 }
 
 async function fetchUVIndex(lat: number, lon: number): Promise<number> {
@@ -113,7 +146,7 @@ async function fetchUVIndex(lat: number, lon: number): Promise<number> {
 
 export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherData> {
   const { lat, lon } = city;
-  const [current, forecast, uv_index] = await Promise.all([
+  const [current, { hourly, daily }, uv_index] = await Promise.all([
     fetchCurrentWeather(lat, lon),
     fetchForecast(lat, lon),
     fetchUVIndex(lat, lon),
@@ -131,7 +164,8 @@ export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherDa
       icon: current.weather[0].icon,
       uv_index,
     },
-    forecast,
+    hourly,
+    forecast: daily,
   };
 }
 

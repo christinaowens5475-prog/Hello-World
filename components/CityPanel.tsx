@@ -24,7 +24,7 @@ function formatTemp(value: number): string {
 }
 
 export default function CityPanel({ data, bgClass }: Props) {
-  const { city, current, forecast } = data;
+  const { city, current, hourly, forecast } = data;
 
   return (
     <div className={`flex-1 rounded-3xl ${bgClass} p-5 flex flex-col gap-4`}>
@@ -73,25 +73,53 @@ export default function CityPanel({ data, bgClass }: Props) {
         ))}
       </div>
 
-      {/* Forecast strip */}
-      <div className="flex gap-2">
-        {forecast.map((day) => (
-          <div
-            key={day.date}
-            className="flex flex-col items-center gap-1 flex-1 bg-white/15 backdrop-blur-sm rounded-xl py-3"
-          >
-            <p className="text-xs text-white/70">{dayName(day.date)}</p>
-            <Image
-              src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
-              alt={`condition ${day.condition_id}`}
-              width={32}
-              height={32}
-              unoptimized
-            />
-            <p className="text-xs font-semibold text-white">{formatTemp(day.high)}F</p>
-            <p className="text-xs text-white/60">{formatTemp(day.low)}F</p>
-          </div>
-        ))}
+      {/* 12-Hour forecast */}
+      <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-3 flex flex-col gap-2">
+        <p className="text-xs uppercase tracking-wider text-white/60">12-Hour</p>
+        <div className="flex gap-2">
+          {hourly.map((entry) => (
+            <div
+              key={entry.time}
+              className="flex flex-col items-center gap-1 flex-1"
+            >
+              <p className="text-xs text-white/70">{entry.time}</p>
+              <Image
+                src={`https://openweathermap.org/img/wn/${entry.icon}@2x.png`}
+                alt={`condition ${entry.condition_id}`}
+                width={32}
+                height={32}
+                unoptimized
+              />
+              <p className="text-xs font-semibold text-white">
+                {formatTemp(entry.temp)}F
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5-Day forecast strip */}
+      <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-3 flex flex-col gap-2">
+        <p className="text-xs uppercase tracking-wider text-white/60">5-Day</p>
+        <div className="flex gap-2">
+          {forecast.map((day) => (
+            <div
+              key={day.date}
+              className="flex flex-col items-center gap-1 flex-1"
+            >
+              <p className="text-xs text-white/70">{dayName(day.date)}</p>
+              <Image
+                src={`https://openweathermap.org/img/wn/${day.icon}@2x.png`}
+                alt={`condition ${day.condition_id}`}
+                width={32}
+                height={32}
+                unoptimized
+              />
+              <p className="text-xs font-semibold text-white">{formatTemp(day.high)}F</p>
+              <p className="text-xs text-white/60">{formatTemp(day.low)}F</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
