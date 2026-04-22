@@ -19,9 +19,13 @@ export default function CurrentWeather({ temp, feelsLike, condition, icon, cityN
         height={100}
         unoptimized
       />
-      <p className="text-7xl font-bold text-white drop-shadow">{Math.round(temp)}°F</p>
+      <p className="text-7xl font-bold text-white drop-shadow">
+        {Number.isFinite(temp) ? `${Math.round(temp)}°F` : "--"}
+      </p>
       <p className="text-xl capitalize text-white/90 drop-shadow">{condition}</p>
-      <p className="text-sm text-white/75">Feels like {Math.round(feelsLike)}°F</p>
+      <p className="text-sm text-white/75">
+        Feels like {Number.isFinite(feelsLike) ? `${Math.round(feelsLike)}°F` : "--"}
+      </p>
     </div>
   );
 }

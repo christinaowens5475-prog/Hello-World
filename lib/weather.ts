@@ -110,8 +110,8 @@ export async function getWeatherData(): Promise<WeatherData> {
 
   return {
     current: {
-      temp: current.main.temp,
-      feels_like: current.main.feels_like,
+      temp: current.main.temp ?? current.main.temp_max,
+      feels_like: current.main.feels_like ?? current.main.temp,
       humidity: current.main.humidity,
       wind_speed: current.wind.speed,
       condition_id: current.weather[0].id,
