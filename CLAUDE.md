@@ -38,7 +38,7 @@ pnpm test       # run Vitest
 - [x] step-04 — Dynamic Background
 - [x] step-05 — UI Components
 - [x] step-06 — Responsive Layout
-- [ ] step-07 — Deploy to Vercel
+- [x] step-07 — Deploy to Vercel (build passing, pushed to GitHub)
 
 ## Coordinates
 Long Beach, CA: lat=33.7701, lon=-118.1937, units=imperial
