@@ -57,11 +57,12 @@ export default function CityPanel({ data, bgClass }: Props) {
       </div>
 
       {/* Detail stats */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {[
           { label: "Humidity", value: `${current.humidity}%` },
           { label: "Wind",     value: `${Math.round(current.wind_speed)} mph` },
           { label: "UV Index", value: `${current.uv_index} · ${uvLabel(current.uv_index)}` },
+          { label: "Precip",   value: `${(current.precipitation_mm / 25.4).toFixed(2)} in` },
         ].map(({ label, value }) => (
           <div
             key={label}

@@ -21,6 +21,7 @@ export interface CurrentWeather {
   description: string;
   icon: string;
   uv_index: number;
+  precipitation_mm: number;
 }
 
 export interface ForecastDay {
@@ -56,6 +57,8 @@ interface OWMCurrentResponse {
   };
   wind: { speed: number };
   weather: { id: number; description: string; icon: string }[];
+  rain?: { "1h"?: number };
+  snow?: { "1h"?: number };
 }
 
 interface OWMForecastEntry {
@@ -164,6 +167,7 @@ export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherDa
       description: current.weather[0].description,
       icon: current.weather[0].icon,
       uv_index,
+      precipitation_mm: (current.rain?.["1h"] ?? 0) + (current.snow?.["1h"] ?? 0),
     },
     hourly,
     forecast: daily,

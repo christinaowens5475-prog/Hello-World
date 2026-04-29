@@ -39,6 +39,7 @@ pnpm test       # run Vitest
 - [x] step-05 — UI Components
 - [x] step-06 — Responsive Layout
 - [x] step-07 — Deploy to Vercel (build passing, pushed to GitHub)
+- [x] step-11 — Precipitation stat card on both city panels
 
 ## Coordinates
 Long Beach, CA: lat=33.7701, lon=-118.1937, units=imperial
