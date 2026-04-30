@@ -143,9 +143,13 @@ async function fetchForecast(lat: number, lon: number, timezone: string): Promis
 }
 
 async function fetchUVIndex(lat: number, lon: number): Promise<number> {
-  const url = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey()}`;
-  const data = await fetchJSON<OWMUVResponse>(url);
-  return data.value;
+  try {
+    const url = `${BASE_URL}/uvi?lat=${lat}&lon=${lon}&appid=${apiKey()}`;
+    const data = await fetchJSON<OWMUVResponse>(url);
+    return data.value;
+  } catch {
+    return 0;
+  }
 }
 
 export async function getWeatherDataForCity(city: CityConfig): Promise<WeatherData> {
